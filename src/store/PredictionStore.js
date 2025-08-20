@@ -54,4 +54,3 @@ export function usePredictionStore(selector = (s) => s) {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot);
   return selector(snapshot);
 }
-
