@@ -138,4 +138,3 @@ const BitcoinPrediction = ({
 };
 
 export default BitcoinPrediction;
-

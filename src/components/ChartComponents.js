@@ -278,4 +278,3 @@ export const PredictionAnalysis = ({ mode = 'analysis', containerHeight, accurac
     </div>
   );
 };
-

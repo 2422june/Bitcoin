@@ -4,5 +4,3 @@ export function handleQuestionClick(text) {
   // eslint-disable-next-line no-console
   console.log('question clicked:', text);
 }
-
-
