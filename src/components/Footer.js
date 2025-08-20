@@ -2,9 +2,9 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="bg-card-bg border-t border-border-color mt-12">
+    <footer className="border-t border-border-color mt-12" style={{ backgroundColor: 'rgba(67,67,67,0.34)' }}>
       <div className="container mx-auto px-6 py-12">
-        <div className="max-w-4x">
+        <div className="max-w-[1420px] overflow-hidden">
 
           {/* 아이콘 + 소개 문구 */}
           <div className="flex items-start space-x-3 mb-8">
@@ -18,7 +18,7 @@ const Footer = () => {
           <div className="h-12"></div>
 
           {/* 저작권 */}
-          <p className="text-[14px]text-gray-400 text-sm mb-4">© 2025 Logo. All Rights Reserved.</p>
+          <p className="text-gray-400 text-sm mb-4">© 2025 Logo. All Rights Reserved.</p>
 
           {/* 면책 조항 */}
           <p className="text-xs text-gray-500 leading-relaxed">

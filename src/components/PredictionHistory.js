@@ -33,12 +33,7 @@ const PredictionHistory = () => {
               return (
                 <div key={index} className="flex flex-col items-center">
                   <p className="text-[20px] font-semibold text-center mb-4">{item.date}</p>
-                  <div
-                    className={`rounded-2xl px-8 py-6 text-white border border-border-color min-w-[120px] text-center ${
-                      isPositive ? 'bg-green-600' : 'bg-red-600'
-                    }`}
-                    style={{ boxShadow: '0 6px 0 rgba(255,255,255,0.08)' }}
-                  >
+                  <div className={`rounded-2xl text-white border border-border-color flex flex-col items-center justify-center ${isPositive ? 'bg-green-600' : 'bg-red-600'}`} style={{ width: 161, height: 85, boxShadow: '0 6px 0 rgba(255,255,255,0.08)' }}>
                     <p className="text-[16px] mb-1">변동률: {item.fluctuation}</p>
                     <p className="text-[16px]">적중률: {item.accuracy}</p>
                   </div>
