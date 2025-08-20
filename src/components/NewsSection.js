@@ -106,6 +106,9 @@ const NewsSection = () => {
 
   return (
     <div className="mb-8">
+    <div className="h-12"></div>
+    <div className="h-px bg-gray-700"></div>
+    <div className="h-36"></div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <h2 className="text-2xl font-bold">BTC 뉴스</h2>

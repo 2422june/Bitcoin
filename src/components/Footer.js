@@ -4,7 +4,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border-color mt-12" style={{ backgroundColor: 'rgba(67,67,67,0.34)' }}>
       <div className="container mx-auto px-6 py-12">
-        <div className="max-w-[1420px] overflow-hidden">
+        <div className="max-w-[1420px] mx-auto overflow-hidden">
 
           {/* 아이콘 + 소개 문구 */}
           <div className="flex items-start space-x-3 mb-8">
