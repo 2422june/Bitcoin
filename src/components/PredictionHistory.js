@@ -56,4 +56,3 @@ const PredictionHistory = () => {
 };
 
 export default PredictionHistory;
-

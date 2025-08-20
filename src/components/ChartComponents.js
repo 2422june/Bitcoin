@@ -1,25 +1,36 @@
 import React from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
+import { useNow, formatNow, formatPriceKRW } from '../utils/useNow';
+import { usePredictionStore } from '../store/PredictionStore';
 
 // 분 단위 변동 차트
-export const MinuteFluctuationChart = ({ height = 200, showHeader = true }) => {
-  const data = [
-    { time: '13:00', value: 100 },
-    { time: '13:01', value: 105 },
-    { time: '13:02', value: 98 },
-    { time: '13:03', value: 110 },
-    { time: '13:04', value: 108 },
-    { time: '13:05', value: 115 },
-  ];
+export const MinuteFluctuationChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
+  // 60분간의 분별 변동률 데이터 생성
+  const generateMinuteData = () => {
+    const minuteData = [];
+    
+    for (let minute = 0; minute < 60; minute++) {
+      // 각 분마다 랜덤 변동률 (-2% ~ +2%)
+      const randomChange = (Math.random() - 0.5) * 4;
+      
+      minuteData.push({
+        time: minute,
+        value: Math.round(randomChange * 10) / 10 // 소수점 첫째자리까지
+      });
+    }
+    
+    return minuteData;
+  };
+
+  const chartData = data.length > 0 ? data : generateMinuteData();
 
   return (
-    <div className="p-1 rounded-lg">
-      {showHeader && <h3 className="text-lg font-semibold mb-4 text-center">분 단위 변동</h3>}
+    <div className="p-1 rounded-lg flex items-center justify-center h-full">
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={data}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="time" stroke="#666" />
-          <YAxis stroke="#666" />
+          <XAxis dataKey="time" stroke="#666" domain={[0, 60]} hide={!showAxisLabels} />
+          <YAxis stroke="#666" domain={[-100, 100]} hide={!showAxisLabels} />
           <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
           <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={2} dot={{ fill: '#3B82F6' }} />
         </LineChart>
@@ -29,24 +40,36 @@ export const MinuteFluctuationChart = ({ height = 200, showHeader = true }) => {
 };
 
 // 시간 단위 가격 차트
-export const HourPriceChart = ({ height = 200, showHeader = true }) => {
-  const data = [
-    { hour: '09:00', price: 100, volume: 50 },
-    { hour: '10:00', price: 105, volume: 60 },
-    { hour: '11:00', price: 98, volume: 45 },
-    { hour: '12:00', price: 110, volume: 70 },
-    { hour: '13:00', price: 108, volume: 55 },
-    { hour: '14:00', price: 115, volume: 80 },
-  ];
+export const HourPriceChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
+  // 하루 동안의 시간별 가격 데이터 생성
+  const generateHourlyData = () => {
+    const hourlyData = [];
+    const basePrice = 165372669.46;
+    
+    for (let hour = 0; hour < 24; hour++) {
+      // 각 시간마다 랜덤 변동률 (-3% ~ +3%)
+      const randomChange = (Math.random() - 0.5) * 0.06;
+      const price = basePrice * (1 + randomChange);
+      
+      hourlyData.push({
+        hour: `${hour}:00`,
+        price: Math.round(price),
+        volume: Math.floor(Math.random() * 1000000) + 500000
+      });
+    }
+    
+    return hourlyData;
+  };
+
+  const chartData = data.length > 0 ? data : generateHourlyData();
 
   return (
-    <div className="bg-card-bg p-4 rounded-lg border border-border-color">
-      {showHeader && <h3 className="text-lg font-semibold mb-4 text-center">시간 단위 가격</h3>}
+    <div className="p-1 rounded-lg flex items-center justify-center h-full">
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="hour" stroke="#666" />
-          <YAxis stroke="#666" />
+          <XAxis dataKey="hour" stroke="#666" hide={!showAxisLabels} />
+          <YAxis stroke="#666" hide={!showAxisLabels} />
           <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
           <Bar dataKey="price" fill="#10B981" />
           <Bar dataKey="volume" fill="#EF4444" />
@@ -57,67 +80,135 @@ export const HourPriceChart = ({ height = 200, showHeader = true }) => {
 };
 
 // 데일리 종합 차트
-export const DailyComprehensiveChart = ({ height = 200, showHeader = true }) => {
-  const data = [
-    { day: '월', price: 100, volume: 1000 },
-    { day: '화', price: 105, volume: 1200 },
-    { day: '수', price: 98, volume: 900 },
-    { day: '목', price: 110, volume: 1400 },
-    { day: '금', price: 108, volume: 1100 },
-    { day: '토', price: 115, volume: 1600 },
-    { day: '일', price: 112, volume: 1300 },
-  ];
+export const DailyComprehensiveChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
+  // 7일간의 일별 가격 데이터 생성 (시작, 중간, 마지막 가격)
+  const generateDailyData = () => {
+    const dailyData = [];
+    const basePrice = 165372669.46;
+    const days = ['오늘', '어제', '2일전', '3일전', '4일전', '5일전', '6일전'];
+    
+    for (let i = 0; i < 7; i++) {
+      // 각 날짜마다 랜덤 변동률 (-5% ~ +5%)
+      const randomChange = (Math.random() - 0.5) * 0.1;
+      const baseDayPrice = basePrice * (1 + randomChange);
+      
+      // 하루의 시작, 중간, 마지막 가격 생성
+      const startPrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.02); // ±1%
+      const middlePrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.03); // ±1.5%
+      const endPrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.02); // ±1%
+      
+      dailyData.push({
+        day: days[i],
+        startPrice: Math.round(startPrice),
+        middlePrice: Math.round(middlePrice),
+        endPrice: Math.round(endPrice),
+        volume: Math.floor(Math.random() * 2000000) + 1000000
+      });
+    }
+    
+    return dailyData;
+  };
+
+  const chartData = data.length > 0 ? data : generateDailyData();
 
   return (
-    <div className="bg-card-bg p-4 rounded-lg border border-border-color">
-      {showHeader && <h3 className="text-lg font-semibold mb-4 text-center">데일리 종합 차트</h3>}
+    <div className="p-1 rounded-lg flex items-center justify-center h-full">
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="day" stroke="#666" />
-          <YAxis stroke="#666" />
+          <XAxis dataKey="day" stroke="#666" hide={!showAxisLabels} />
+          <YAxis stroke="#666" hide={!showAxisLabels} />
           <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
-          <Bar dataKey="price" fill="#8B5CF6" />
-          <Bar dataKey="volume" fill="#F59E0B" />
+          <Bar dataKey="startPrice" fill="#8B5CF6" name="시작가" />
+          <Bar dataKey="middlePrice" fill="#F59E0B" name="중간가" />
+          <Bar dataKey="endPrice" fill="#EF4444" name="마감가" />
         </BarChart>
       </ResponsiveContainer>
     </div>
   );
 };
 
-// 게이지 차트 (반원)
-export const GaugeChart = ({ value = 70, min = 0, max = 100, bare = false }) => {
+// 게이지 차트 (반원) - 값만큼 그라데이션 채움, 나머지는 회색
+export const GaugeChart = ({
+  value = 70,
+  min = 0,
+  max = 100,
+  bare = false,
+  unfilledColor = '#3f3f46', // 회색(남은 구간)
+}) => {
   const safeMin = Number.isFinite(min) ? min : 0;
   const safeMax = Number.isFinite(max) && max !== min ? max : 100;
   const clamped = Math.max(safeMin, Math.min(value, safeMax));
   const percent = ((clamped - safeMin) / (safeMax - safeMin)) * 100;
-  const data = [{ name: 'value', value: percent }];
 
-  const coreChart = (
-    <ResponsiveContainer width="100%" height="100%">
+  // 스택 형태로: 채워진 구간 + 남은 구간
+  const data = [
+    {
+      name: 'gauge',
+      filled: Math.max(0, Math.min(100, percent)),
+      remaining: Math.max(0, 100 - Math.max(0, Math.min(100, percent))),
+    },
+  ];
+
+  const chart = (
+    <div className="relative w-full h-full">
+      <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
           data={data}
-          innerRadius="70%"
-          outerRadius="100%"
+          innerRadius="72%"
+          outerRadius="90%"
           startAngle={180}
           endAngle={0}
           cx="50%"
           cy="100%"
         >
+          <defs>
+            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2E26FF" />
+              <stop offset="50%" stopColor="#9A26FF" />
+              <stop offset="100%" stopColor="#FF0A5B" />
+            </linearGradient>
+          </defs>
           <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-          <RadialBar dataKey="value" cornerRadius={10} background fill="#F59E0B" />
+          {/* 남은 구간(회색) */}
+          <RadialBar
+            dataKey="remaining"
+            stackId="gauge"
+            fill={unfilledColor}
+            cornerRadius={10}
+            background={false}
+          />
+          {/* 채워진 구간(그라데이션) */}
+          <RadialBar
+            dataKey="filled"
+            stackId="gauge"
+            fill="url(#gaugeGradient)"
+            cornerRadius={10}
+            background={false}
+          />
         </RadialBarChart>
       </ResponsiveContainer>
+
+      {/* 라벨: 이미지 유사 배치 */}
+      <div className="pointer-events-none absolute inset-0 select-none">
+        <div className="absolute left-[272px] bottom-3 text-gray-400 text-[28px] font-extrabold">취약</div>
+        <div className="absolute left-[18%] top-[16%] -translate-x-1/2 text-gray-400 text-[28px] font-extrabold">약세</div>
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 text-gray-400 text-[28px] font-extrabold">안정</div>
+        <div className="absolute right-[18%] top-[16%] translate-x-1/2 text-pink-500 text-[28px] font-extrabold">강세</div>
+        <div className="absolute right-2 bottom-5 text-gray-400 text-[28px] font-extrabold">완강</div>
+        {/* 하단 중앙 포인트 */}
+        <div className="absolute left-1/2 bottom-1 -translate-x-1/2 w-6 h-6 rounded-full" style={{ backgroundColor: '#d4d4d4' }} />
+      </div>
+    </div>
   );
 
   if (bare) {
-    return coreChart;
+    return chart;
   }
 
   return (
     <div className="bg-card-bg p-4 rounded-lg border border-border-color">
-      {coreChart}
-      <div className="text-center mt-2 text-sm text-gray-400">약세 · 안정 · 강세</div>
+      {chart}
     </div>
   );
 };
@@ -150,7 +241,18 @@ export const AccuracyProgressChart = ({ accurate = 60, inaccurate = 40 }) => {
 };
 
 // 예측 분석(또는 차트 대체 렌더) - PredictionAnalysis 통합
-export const PredictionAnalysis = ({ mode = 'analysis', containerHeight }) => {
+export const PredictionAnalysis = ({ mode = 'analysis', containerHeight, accuracySuccess = 60 }) => {
+  // 훅은 최상위에서 무조건 호출
+  const now = useNow(1000);
+  const { dateText } = formatNow(now);
+  const { prevPrediction, actualChange, difference, prevPredictedPrice, actualPrice } = usePredictionStore((s) => ({
+    prevPrediction: s.prevPrediction,
+    actualChange: s.actualChange,
+    difference: s.difference,
+    prevPredictedPrice: s.prevPredictedPrice,
+    actualPrice: s.actualPrice,
+  }));
+
   if (mode === 'minute') {
     return <MinuteFluctuationChart height={containerHeight ? containerHeight - 16 : 260} showHeader={false} />;
   }
@@ -162,40 +264,51 @@ export const PredictionAnalysis = ({ mode = 'analysis', containerHeight }) => {
   }
 
   return (
-    <div className="bg-card-bg p-6 rounded-lg border border-border-color relative flex flex-col" style={containerHeight ? { height: containerHeight } : undefined}>
+    <div className="relative flex flex-col" style={containerHeight ? { height: containerHeight } : undefined}>
       <h2 className="text-xl font-bold">예측 분석</h2>
-      <div className="text-sm text-gray-300 mt-2 pb-3 border-b border-gray-700">2025.11.08 - 13:03</div>
+      <div className="text-sm text-gray-300 mt-2 pb-3 border-b border-gray-700">{dateText}</div>
 
       <div className="mt-4 space-y-3 text-sm">
         <div className="flex justify-between">
           <span className="text-gray-300">직전 예측</span>
-          <span className="text-blue-400 font-semibold">30% ▼</span>
+          <span className={prevPrediction > 0 ? 'text-red-400 font-semibold' : prevPrediction < 0 ? 'text-blue-400 font-semibold' : 'font-semibold'}>
+            {Math.abs(prevPrediction)}% {prevPrediction > 0 ? '▲' : prevPrediction < 0 ? '▼' : '–'}
+          </span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-300">실제 변동</span>
-          <span className="text-red-400 font-semibold">100% ▲</span>
+          <span className={actualChange > 0 ? 'text-red-400 font-semibold' : actualChange < 0 ? 'text-blue-400 font-semibold' : 'font-semibold'}>
+            {Math.abs(actualChange)}% {actualChange > 0 ? '▲' : actualChange < 0 ? '▼' : '–'}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-300">이전 예상 가격</span>
+          <span className="font-semibold">{formatPriceKRW(prevPredictedPrice)} KRW</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-300">실제 가격</span>
+          <span className="font-semibold">{formatPriceKRW(actualPrice)} KRW</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-300">변동 차이</span>
-          <span className="text-yellow-400 font-semibold">130%</span>
+          <span className="font-semibold">{Math.round(difference)}%</span>
         </div>
       </div>
 
-      {/* 하단 적중률(오늘) 영역 - 이미지처럼 얇은 막대 + 좌우 수치 */}
-      <div className="mt-auto pt-6">
+      {/* 하단 적중률(오늘) 영역 - 얇은 막대 + 좌우 수치 */}
+      <div className="mt-auto border-t border-gray-700 pt-6">
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="text-gray-300">적중률(오늘)</span>
-          <span className="text-gray-300">60%</span>
+          <span className="text-gray-300">{Math.max(0, Math.min(100, accuracySuccess))}%</span>
         </div>
         <div className="bg-gray-700 rounded-full h-4 overflow-hidden">
-          <div className="h-4 w-[60%] bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"></div>
+          <div className="h-4 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500" style={{ width: `${Math.max(0, Math.min(100, accuracySuccess))}%` }}></div>
         </div>
         <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>60</span>
-          <span>40</span>
+          <span>{Math.max(0, Math.min(100, accuracySuccess))}</span>
+          <span>{Math.max(0, 100 - Math.max(0, Math.min(100, accuracySuccess)))}</span>
         </div>
       </div>
     </div>
   );
 };
-
