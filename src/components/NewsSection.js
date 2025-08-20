@@ -1,11 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CRYPTO_API_CONFIG, 
-  createCryptoNewsQuery, 
-  sanitizeCryptoNewsData, 
-  handleCryptoAPIError, 
-  generateCryptoDummyNews 
-} from '../utils/newsAPI';
 
 const NewsSection = () => {
   const [news, setNews] = useState([]);
@@ -21,38 +14,42 @@ const NewsSection = () => {
       setLoading(true);
       setError(null);
       
-      // CryptoCompare API 쿼리 생성
-      const queryString = createCryptoNewsQuery({
-        categories: 'ALL', // 모든 카테고리
-        feeds: 'ALL', // 모든 피드
-        lang: 'EN', // 영어 (한국어 지원 안함)
-        sortOrder: 'latest', // 최신순
-        limit: 12
+      console.log('🚀 백엔드 API 호출 시작');
+      
+      // 백엔드 API 호출
+      const response = await fetch('http://localhost:8000/api/news?limit=12', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': window.location.origin
+        },
+        mode: 'cors',
+        credentials: 'omit'
       });
 
-      const response = await fetch(
-        `${CRYPTO_API_CONFIG.BASE_URL}${CRYPTO_API_CONFIG.ENDPOINTS.NEWS}?${queryString}`
-      );
+      console.log('📡 응답 상태:', response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(handleCryptoAPIError(errorData));
+        const errorText = await response.text();
+        console.error('❌ HTTP 오류:', response.status, errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const result = await response.json();
+      console.log('📡 백엔드 API 응답:', result);
       
-      if (data.Data && data.Data.length > 0) {
-        const sanitizedNews = sanitizeCryptoNewsData(data);
-        setNews(sanitizedNews);
+      if (result.success && result.data && result.data.length > 0) {
+        console.log('✅ 백엔드에서 뉴스 데이터 반환');
+        setNews(result.data);
+        setError(null);
       } else {
-        console.warn('뉴스 데이터가 없습니다. 더미 데이터를 사용합니다.');
-        setNews(generateCryptoDummyNews());
+        console.warn('⚠️ 백엔드 데이터 없음');
+        setError('뉴스 데이터를 가져올 수 없습니다.');
       }
     } catch (err) {
       console.error('뉴스 가져오기 오류:', err);
-      setError(err.message);
-      // 오류 발생시 더미 데이터 사용
-      setNews(generateCryptoDummyNews());
+      setError(`연결 오류: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -60,20 +57,18 @@ const NewsSection = () => {
 
   // 뉴스 클릭 처리 함수
   const handleNewsClick = (article) => {
-    if (article.url && article.url !== '#') {
-      // 새 탭에서 뉴스 페이지 열기
+    console.log('🖱️ 뉴스 클릭:', {
+      title: article.title,
+      url: article.url,
+      source: article.source?.name
+    });
+    
+    if (article.url && article.url !== '#' && article.url !== '') {
+      // 새 탭에서 실제 뉴스 페이지 열기
       window.open(article.url, '_blank', 'noopener,noreferrer');
-      
-      // 클릭 로그 (선택사항)
-      console.log('뉴스 클릭:', {
-        title: article.title,
-        url: article.url,
-        source: article.source?.name,
-        timestamp: new Date().toISOString()
-      });
     } else {
-      // URL이 없는 경우 알림
-      alert('이 뉴스는 더미 데이터입니다. 실제 뉴스를 가져오려면 API 키를 설정해주세요.');
+      console.warn('⚠️ 유효하지 않은 URL:', article.url);
+      alert('이 뉴스의 링크가 유효하지 않습니다.');
     }
   };
 
@@ -96,7 +91,6 @@ const NewsSection = () => {
       <div className="mb-8">
         <div className="flex items-center mb-6">
           <h2 className="text-2xl font-bold">BTC 뉴스</h2>
-          <span className="text-gray-400 ml-2">&gt;</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array(12).fill(null).map((_, index) => (
@@ -115,7 +109,6 @@ const NewsSection = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <h2 className="text-2xl font-bold">BTC 뉴스</h2>
-          <span className="text-gray-400 ml-2">&gt;</span>
         </div>
         <button 
           onClick={fetchNews}
@@ -125,11 +118,19 @@ const NewsSection = () => {
         </button>
       </div>
 
-      {error && (
-        <div className="bg-red-900/20 border border-red-500 text-red-400 p-3 rounded-lg mb-4">
-          ⚠️ {error} - 더미 데이터를 표시합니다.
-        </div>
-      )}
+             {error && (
+         <div className="bg-red-900/20 border border-red-500 text-red-400 p-3 rounded-lg mb-4">
+           ⚠️ {error}
+           <button 
+             onClick={fetchNews}
+             className="ml-3 text-red-300 hover:text-white underline"
+           >
+             다시 시도
+           </button>
+         </div>
+       )}
+
+       
       
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
            {news.map((article, index) => (
@@ -158,24 +159,8 @@ const NewsSection = () => {
                    {formatDate(article.publishedAt)}
                  </span>
                </div>
-               {article.source?.name && (
-                 <p className="text-xs text-gray-500 mt-1">
-                   출처: {article.source.name}
-                 </p>
-               )}
-               {/* 카테고리 태그 표시 */}
-               {article.categories && article.categories.length > 0 && (
-                 <div className="flex flex-wrap gap-1 mt-2">
-                   {article.categories.slice(0, 3).map((category, catIndex) => (
-                     <span 
-                       key={catIndex}
-                       className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full"
-                     >
-                       {category}
-                     </span>
-                   ))}
-                 </div>
-               )}
+                               
+
              </div>
            ))}
          </div>

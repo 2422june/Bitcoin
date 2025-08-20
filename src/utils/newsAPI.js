@@ -30,11 +30,32 @@ export const createCryptoNewsQuery = (options = {}) => {
   });
 
   // API 키가 있으면 추가
-  if (CRYPTO_API_CONFIG.API_KEY) {
+  if (CRYPTO_API_CONFIG.API_KEY && CRYPTO_API_CONFIG.API_KEY !== 'YOUR_NEWS_API_KEY') {
     params.append('api_key', CRYPTO_API_CONFIG.API_KEY);
   }
 
   return params.toString();
+};
+
+// API 상태 확인
+export const getAPIStatus = () => {
+  console.log('🔍 API 키 확인:', {
+    rawKey: CRYPTO_API_CONFIG.API_KEY,
+    keyLength: CRYPTO_API_CONFIG.API_KEY?.length,
+    hasKey: !!CRYPTO_API_CONFIG.API_KEY
+  });
+  
+  const hasValidKey = CRYPTO_API_CONFIG.API_KEY && 
+                     CRYPTO_API_CONFIG.API_KEY !== 'YOUR_NEWS_API_KEY' &&
+                     CRYPTO_API_CONFIG.API_KEY !== 'your_api_key_here' &&
+                     CRYPTO_API_CONFIG.API_KEY.length > 10;
+  
+  return {
+    hasKey: hasValidKey,
+    isFreeTier: !hasValidKey,
+    rateLimit: hasValidKey ? '분당 10000회' : '분당 1000회',
+    message: hasValidKey ? 'API 키 사용 중' : '무료 티어 사용 중'
+  };
 };
 
 // CryptoCompare 뉴스 데이터 정제
