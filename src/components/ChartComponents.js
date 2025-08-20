@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 
 // 분 단위 변동 차트
 export const MinuteFluctuationChart = () => {
@@ -81,6 +81,62 @@ export const DailyComprehensiveChart = () => {
           <Bar dataKey="volume" fill="#F59E0B" />
         </BarChart>
       </ResponsiveContainer>
+    </div>
+  );
+};
+
+// 게이지 차트 (반원)
+export const GaugeChart = ({ value = 70, min = 0, max = 100 }) => {
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) && max !== min ? max : 100;
+  const clamped = Math.max(safeMin, Math.min(value, safeMax));
+  const percent = ((clamped - safeMin) / (safeMax - safeMin)) * 100;
+  const data = [{ name: 'value', value: percent }];
+
+  return (
+    <div className="bg-card-bg p-4 rounded-lg border border-border-color">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadialBarChart
+          data={data}
+          innerRadius="70%"
+          outerRadius="100%"
+          startAngle={180}
+          endAngle={0}
+          cx="50%"
+          cy="100%"
+        >
+          <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+          <RadialBar dataKey="value" cornerRadius={10} background fill="#F59E0B" />
+        </RadialBarChart>
+      </ResponsiveContainer>
+      <div className="text-center mt-2 text-sm text-gray-400">약세 · 안정 · 강세</div>
+    </div>
+  );
+};
+
+// 적중률 막대 차트
+export const AccuracyProgressChart = ({ accurate = 60, inaccurate = 40 }) => {
+  const data = [{ name: '오늘', accurate, inaccurate }];
+  return (
+    <div className="bg-dark-bg p-4 rounded-lg">
+      <ResponsiveContainer width="100%" height={100}>
+        <BarChart data={data} layout="vertical" margin={{ left: 0, right: 0, top: 8, bottom: 8 }}>
+          <CartesianGrid horizontal={false} vertical={false} />
+          <XAxis type="number" domain={[0, 100]} hide />
+          <YAxis type="category" dataKey="name" hide />
+          <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
+          <Bar dataKey="accurate" stackId="a" fill="#22c55e" radius={[8, 0, 0, 8]} />
+          <Bar dataKey="inaccurate" stackId="a" fill="#3b82f6" radius={[0, 8, 8, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="flex justify-between text-sm mt-2">
+        <span className="text-gray-400">정확</span>
+        <span className="font-semibold">{accurate}%</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-400">부정확</span>
+        <span className="font-semibold">{inaccurate}%</span>
+      </div>
     </div>
   );
 };

@@ -7,8 +7,8 @@ const Header = () => {
         <div className="flex justify-between items-center">
           {/* 로고 및 타이틀 */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-bitcoin-gold rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">₿</span>
+            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+              <img src="/bitcoin-icon.svg" alt="Bitcoin" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-xl font-bold">최고가 되는 순간 코인 타임</h1>
           </div>

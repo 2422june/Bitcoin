@@ -1,4 +1,5 @@
 import React from 'react';
+import { AccuracyProgressChart } from './ChartComponents';
 
 const PredictionAnalysis = () => {
   return (
@@ -28,25 +29,10 @@ const PredictionAnalysis = () => {
         </div>
       </div>
 
-      {/* 적중률 차트 */}
+      {/* 적중률 차트 (Recharts) */}
       <div>
         <h3 className="text-lg font-semibold mb-4">적중률(오늘)</h3>
-        <div className="bg-dark-bg p-4 rounded-lg">
-          <div className="flex items-center space-x-4 mb-2">
-            <span className="text-sm text-gray-400">정확</span>
-            <div className="flex-1 bg-gray-700 rounded-full h-4">
-              <div className="bg-red-500 h-4 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-            <span className="text-sm font-semibold">60%</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-400">부정확</span>
-            <div className="flex-1 bg-gray-700 rounded-full h-4">
-              <div className="bg-blue-500 h-4 rounded-full" style={{ width: '40%' }}></div>
-            </div>
-            <span className="text-sm font-semibold">40%</span>
-          </div>
-        </div>
+        <AccuracyProgressChart accurate={60} inaccurate={40} />
       </div>
     </div>
   );

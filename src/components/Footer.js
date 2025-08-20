@@ -7,8 +7,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 로고 및 설명 */}
           <div className="flex items-start space-x-4">
-            <div className="w-16 h-16 bg-bitcoin-gold rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-bold text-2xl">₿</span>
+            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+              <img src="/bitcoin-icon.svg" alt="Bitcoin" className="w-16 h-16 object-contain" />
             </div>
             <div>
               <p className="text-lg leading-relaxed text-gray-300">
