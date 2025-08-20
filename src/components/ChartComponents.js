@@ -64,7 +64,7 @@ export const HourPriceChart = ({ height = 200, showHeader = true, showAxisLabels
   const chartData = data.length > 0 ? data : generateHourlyData();
 
   return (
-    <div className="bg-card-bg p-4 rounded-lg border border-border-color flex items-center justify-center h-full">
+    <div className="p-1 rounded-lg flex items-center justify-center h-full">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -112,7 +112,7 @@ export const DailyComprehensiveChart = ({ height = 200, showHeader = true, showA
   const chartData = data.length > 0 ? data : generateDailyData();
 
   return (
-    <div className="bg-card-bg p-4 rounded-lg border border-border-color flex items-center justify-center h-full">
+    <div className="p-1 rounded-lg flex items-center justify-center h-full">
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />

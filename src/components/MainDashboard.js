@@ -53,11 +53,22 @@ const MainDashboard = () => {
   }, [now]);
 
   const toggleMainView = (target) => {
-    setMainView((prev) => (prev === target ? 'default' : target));
-    if (target === 'minute') setChartTitle('분 단위 변동');
-    else if (target === 'hour') setChartTitle('시간 단위 가격');
-    else if (target === 'daily') setChartTitle('데일리 종합 차트');
-    else setChartTitle('1분 예측');
+    setMainView((prev) => {
+      const newView = prev === target ? 'default' : target;
+      
+      // 차트 제목 설정
+      if (newView === 'default') {
+        setChartTitle('1분 예측');
+      } else if (target === 'minute') {
+        setChartTitle('분 단위 변동');
+      } else if (target === 'hour') {
+        setChartTitle('시간 단위 가격');
+      } else if (target === 'daily') {
+        setChartTitle('데일리 종합 차트');
+      }
+      
+      return newView;
+    });
   };
 
   return (
