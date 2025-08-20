@@ -3,7 +3,7 @@ import { MinuteFluctuationChart, HourPriceChart, DailyComprehensiveChart, Predic
 import BitcoinPrediction from './BitcoinPrediction';
 import { useNow } from '../utils/useNow';
 import { useHeaderHeight } from '../utils/useHeaderHeight';
-import { setPrevPrediction, setActualChange } from '../store/PredictionStore';
+import { setPrevPrediction, setActualChange, addMinuteFluctuationData, addHourlyPriceData, addDailyPriceData } from '../store/PredictionStore';
 
 const MainDashboard = () => {
   // 중앙 메인 영역 높이를 고정(584px). 좌측 썸네일 3개의 전체(각 높이*3 + 간격*2)도 584px로 일치시킴
@@ -35,6 +35,34 @@ const MainDashboard = () => {
   const now = useNow(1000); // 초 경계 정렬됨
   const headerHeight = useHeaderHeight();
 
+  // 초기 데이터 생성 및 일별 데이터 업데이트
+  useEffect(() => {
+    const currentMinute = now.getMinutes();
+    const currentHour = now.getHours();
+    const currentDate = now.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+    
+    // 현재 분에 대한 초기 데이터 추가
+    addMinuteFluctuationData(currentMinute, randomDelta());
+    
+    // 현재 시간에 대한 초기 가격 데이터 추가
+    const currentPrice = 165372669.46;
+    addHourlyPriceData(currentHour, Math.round(currentPrice));
+    
+    // 일별 데이터 업데이트 (매일 자정에)
+    if (currentHour === 0 && currentMinute === 0) {
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const yesterdayDate = yesterday.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+      
+      // 어제의 시작, 중간, 마지막 가격 생성
+      const basePrice = 165372669.46;
+      const startPrice = basePrice * (1 + (Math.random() - 0.5) * 0.02);
+      const middlePrice = basePrice * (1 + (Math.random() - 0.5) * 0.03);
+      const endPrice = basePrice * (1 + (Math.random() - 0.5) * 0.02);
+      
+      addDailyPriceData(yesterdayDate, Math.round(startPrice), Math.round(middlePrice), Math.round(endPrice));
+    }
+  }, [now]);
+
   // 예측 증감 전망을 상위에서 관리하여 차트 전환 시값이 유지되도록 함
   const randomDelta = () => Math.floor(Math.random() * 201) - 100; // -100..100
   const [deltaPercent, setDeltaPercent] = useState(() => randomDelta());
@@ -47,6 +75,17 @@ const MainDashboard = () => {
       // 2) 직전 실 변동치를 생성/저장 (임시: 난수) - 실제 연결 시 실데이터로 교체
       const actual = randomDelta();
       setActualChange(actual);
+
+      // 3) 분별 변동 데이터 추가
+      const currentMinute = now.getMinutes();
+      addMinuteFluctuationData(currentMinute, actual);
+
+      // 4) 시간별 가격 데이터 추가 (매 시간 마지막 분에)
+      if (currentMinute === 59) {
+        const currentHour = now.getHours();
+        const currentPrice = 165372669.46 * (1 + actual / 100);
+        addHourlyPriceData(currentHour, Math.round(currentPrice));
+      }
 
       setDeltaPercent(randomDelta());
     }

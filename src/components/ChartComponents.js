@@ -5,24 +5,13 @@ import { usePredictionStore } from '../store/PredictionStore';
 
 // 분 단위 변동 차트
 export const MinuteFluctuationChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
-  // 60분간의 분별 변동률 데이터 생성
-  const generateMinuteData = () => {
-    const minuteData = [];
-    
-    for (let minute = 0; minute < 60; minute++) {
-      // 각 분마다 랜덤 변동률 (-2% ~ +2%)
-      const randomChange = (Math.random() - 0.5) * 4;
-      
-      minuteData.push({
-        time: minute,
-        value: Math.round(randomChange * 10) / 10 // 소수점 첫째자리까지
-      });
-    }
-    
-    return minuteData;
-  };
+  // 스토어에서 실제 분별 변동 데이터 가져오기
+  const { minuteFluctuationData } = usePredictionStore((s) => ({
+    minuteFluctuationData: s.minuteFluctuationData || []
+  }));
 
-  const chartData = data.length > 0 ? data : generateMinuteData();
+  // 실제 데이터가 있으면 사용, 없으면 빈 배열
+  const chartData = data.length > 0 ? data : minuteFluctuationData;
 
   return (
     <div className="p-1 rounded-lg flex items-center justify-center h-full">
@@ -41,27 +30,13 @@ export const MinuteFluctuationChart = ({ height = 200, showHeader = true, showAx
 
 // 시간 단위 가격 차트
 export const HourPriceChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
-  // 하루 동안의 시간별 가격 데이터 생성
-  const generateHourlyData = () => {
-    const hourlyData = [];
-    const basePrice = 165372669.46;
-    
-    for (let hour = 0; hour < 24; hour++) {
-      // 각 시간마다 랜덤 변동률 (-3% ~ +3%)
-      const randomChange = (Math.random() - 0.5) * 0.06;
-      const price = basePrice * (1 + randomChange);
-      
-      hourlyData.push({
-        hour: `${hour}:00`,
-        price: Math.round(price),
-        volume: Math.floor(Math.random() * 1000000) + 500000
-      });
-    }
-    
-    return hourlyData;
-  };
+  // 스토어에서 실제 시간별 가격 데이터 가져오기
+  const { hourlyPriceData } = usePredictionStore((s) => ({
+    hourlyPriceData: s.hourlyPriceData || []
+  }));
 
-  const chartData = data.length > 0 ? data : generateHourlyData();
+  // 실제 데이터가 있으면 사용, 없으면 빈 배열
+  const chartData = data.length > 0 ? data : hourlyPriceData;
 
   return (
     <div className="p-1 rounded-lg flex items-center justify-center h-full">
@@ -70,9 +45,15 @@ export const HourPriceChart = ({ height = 200, showHeader = true, showAxisLabels
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis dataKey="hour" stroke="#666" hide={!showAxisLabels} />
           <YAxis stroke="#666" hide={!showAxisLabels} />
-          <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }}
+            formatter={(value, name, props) => [
+              `${formatPriceKRW(value)} KRW`,
+              '가격'
+            ]}
+            labelFormatter={(label) => `시간: ${label}`}
+          />
           <Bar dataKey="price" fill="#10B981" />
-          <Bar dataKey="volume" fill="#EF4444" />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -81,35 +62,13 @@ export const HourPriceChart = ({ height = 200, showHeader = true, showAxisLabels
 
 // 데일리 종합 차트
 export const DailyComprehensiveChart = ({ height = 200, showHeader = true, showAxisLabels = false, data = [] }) => {
-  // 7일간의 일별 가격 데이터 생성 (시작, 중간, 마지막 가격)
-  const generateDailyData = () => {
-    const dailyData = [];
-    const basePrice = 165372669.46;
-    const days = ['오늘', '어제', '2일전', '3일전', '4일전', '5일전', '6일전'];
-    
-    for (let i = 0; i < 7; i++) {
-      // 각 날짜마다 랜덤 변동률 (-5% ~ +5%)
-      const randomChange = (Math.random() - 0.5) * 0.1;
-      const baseDayPrice = basePrice * (1 + randomChange);
-      
-      // 하루의 시작, 중간, 마지막 가격 생성
-      const startPrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.02); // ±1%
-      const middlePrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.03); // ±1.5%
-      const endPrice = baseDayPrice * (1 + (Math.random() - 0.5) * 0.02); // ±1%
-      
-      dailyData.push({
-        day: days[i],
-        startPrice: Math.round(startPrice),
-        middlePrice: Math.round(middlePrice),
-        endPrice: Math.round(endPrice),
-        volume: Math.floor(Math.random() * 2000000) + 1000000
-      });
-    }
-    
-    return dailyData;
-  };
+  // 스토어에서 실제 일별 가격 데이터 가져오기
+  const { dailyPriceData } = usePredictionStore((s) => ({
+    dailyPriceData: s.dailyPriceData || []
+  }));
 
-  const chartData = data.length > 0 ? data : generateDailyData();
+  // 실제 데이터가 있으면 사용, 없으면 빈 배열
+  const chartData = data.length > 0 ? data : dailyPriceData;
 
   return (
     <div className="p-1 rounded-lg flex items-center justify-center h-full">
@@ -118,7 +77,14 @@ export const DailyComprehensiveChart = ({ height = 200, showHeader = true, showA
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis dataKey="day" stroke="#666" hide={!showAxisLabels} />
           <YAxis stroke="#666" hide={!showAxisLabels} />
-          <Tooltip contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }}
+            formatter={(value, name) => [
+              `${formatPriceKRW(value)} KRW`,
+              name
+            ]}
+            labelFormatter={(label) => `날짜: ${label}`}
+          />
           <Bar dataKey="startPrice" fill="#8B5CF6" name="시작가" />
           <Bar dataKey="middlePrice" fill="#F59E0B" name="중간가" />
           <Bar dataKey="endPrice" fill="#EF4444" name="마감가" />
