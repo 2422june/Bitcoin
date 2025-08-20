@@ -1,0 +1,52 @@
+<svg width="400" height="160" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원호 -->
+  <path
+    d="M 50 140 A 150 150 0 0 1 350 140"
+    fill="none"
+    stroke="#2d3748"
+    stroke-width="15"
+    stroke-linecap="round"
+  />
+  
+  <!-- 그라데이션 정의 -->
+  <defs>
+    <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EF4444" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 채워진 원호 -->
+  <path
+    d="M 50 140 A 150 150 0 0 1 350 140"
+    fill="none"
+    stroke="url(#gaugeGradient)"
+    stroke-width="15"
+    stroke-linecap="round"
+  />
+  
+  <!-- 하단 중앙 포인터 (흰색 원) -->
+  <circle
+    cx="200"
+    cy="140"
+    r="8"
+    fill="#ffffff"
+  />
+  
+     <!-- 라벨들 - 이미지와 정확히 매칭 -->
+   <!-- 안정 (중앙 상단) -->
+   <text x="200" y="15" text-anchor="middle" fill="#9ca3af" font-size="18" font-weight="bold">안정</text>
+   
+   <!-- 약세 (왼쪽 중간) -->
+   <text x="100" y="65" text-anchor="middle" fill="#9ca3af" font-size="18" font-weight="bold">약세</text>
+   
+   <!-- 강세 (오른쪽 중간) -->
+   <text x="300" y="65" text-anchor="middle" fill="#ec4899" font-size="18" font-weight="bold">강세</text>
+   
+   <!-- 취약 (왼쪽 하단) -->
+   <text x="15" y="155" text-anchor="start" fill="#9ca3af" font-size="18" font-weight="bold">취약</text>
+   
+   <!-- 완강 (오른쪽 하단) -->
+   <text x="385" y="155" text-anchor="end" fill="#9ca3af" font-size="18" font-weight="bold">완강</text>
+</svg>
