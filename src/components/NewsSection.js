@@ -18,7 +18,7 @@ const NewsSection = () => {
       console.log('🚀 백엔드 API 호출 시작');
       
       // 백엔드 API 호출
-      const response = await fetch('http://3.25.140.22:8000/api/news?limit=12', {
+      const response = await fetch('https://3.25.140.22/api/news?limit=12', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
