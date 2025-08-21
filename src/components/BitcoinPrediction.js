@@ -1,8 +1,9 @@
-import React, { useMemo, useEffect, useCallback } from 'react';
+import React, { useMemo, useEffect, useCallback, useState } from 'react';
 import { GaugeChart } from './ChartComponents';
 import { useNow, formatNow, formatPriceKRW } from '../utils/useNow';
 import { handleQuestionClick } from '../utils/actions';
 import { setActualPrice, setPrevPredictedPrice, usePredictionStore } from '../store/PredictionStore';
+import QuestionModal from './QuestionModal';
 
 const BitcoinPrediction = ({
   embedded = false,
@@ -16,6 +17,10 @@ const BitcoinPrediction = ({
 }) => {
   const now = useNow(1000);
   const { dateText, second } = useMemo(() => formatNow(now), [now]);
+  
+  // 모달 상태 관리
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState('');
 
   // 스토어에서 실제 가격 가져오기
   const { actualPrice } = usePredictionStore((s) => ({
@@ -109,6 +114,17 @@ const BitcoinPrediction = ({
     return (deltaPercent + 100) * 180 / 200;
   }
 
+  // 질문 버튼 클릭 핸들러
+  const handleQuestionButtonClick = (question) => {
+    setSelectedQuestion(question);
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기 핸들러
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   const content = (
     <div className="relative">
       {/* 타이틀 */}
@@ -181,7 +197,7 @@ const BitcoinPrediction = ({
                              style={{
                  left: '50%',
                  top: '92%',
-                 transform: `translateX(-100%) rotate(${getDgree}deg)`,
+                                   transform: `translateX(-100%) rotate(${getDgree()}deg)`,
                  width: '150px',
                  height: '15px',
                  transformOrigin: 'right center',
@@ -200,45 +216,67 @@ const BitcoinPrediction = ({
         </div>
       </div>
 
-      {/* 질문 버튼 - 가로 스크롤 */}
-      <div className="w-[800px] m-auto mt-[45px]">
-        <div className="inline-flex gap-3 min-w-full pr-2">
-          <button className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
-            style={{
-              width: '237px',
-              height: '26px',
-              minWidth: '237px'
-            }}>
-            비트코인 관련 최신 이슈 알려줘
-          </button>
-          <button className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
-            style={{
-              width: '237px',
-              height: '26px',
-              minWidth: '237px'
-            }}>
-            요즘 비트코인의 변동 요인을 알려줘
-          </button>
-          <button className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
-            style={{
-              width: '237px',
-              height: '26px',
-              minWidth: '237px'
-            }}>
-            비트코인 현재 중요한게 뭐가 있어?
-          </button>
-        </div>
-      </div>
+             {/* 질문 버튼 - 가로 스크롤 */}
+       <div className="w-[800px] m-auto mt-[45px]">
+         <div className="inline-flex gap-3 min-w-full pr-2">
+           <button 
+             onClick={() => handleQuestionButtonClick('비트코인 관련 최신 이슈 알려줘')}
+             className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
+             style={{
+               width: '237px',
+               height: '26px',
+               minWidth: '237px'
+             }}>
+             비트코인 관련 최신 이슈 알려줘
+           </button>
+           <button 
+             onClick={() => handleQuestionButtonClick('요즘 비트코인의 변동 요인을 알려줘')}
+             className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
+             style={{
+               width: '237px',
+               height: '26px',
+               minWidth: '237px'
+             }}>
+             요즘 비트코인의 변동 요인을 알려줘
+           </button>
+           <button 
+             onClick={() => handleQuestionButtonClick('비트코인 현재 중요한게 뭐가 있어?')}
+             className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors flex items-center justify-center"
+             style={{
+               width: '237px',
+               height: '26px',
+               minWidth: '237px'
+             }}>
+             비트코인 현재 중요한게 뭐가 있어?
+           </button>
+         </div>
+       </div>
 
     </div>
   );
 
   if (embedded) {
-    return <div>{content}</div>;
+    return (
+      <div>
+        {content}
+        <QuestionModal 
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          question={selectedQuestion}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="bg-card-bg p-6 rounded-lg border border-border-color">{content}</div>
+    <div className="bg-card-bg p-6 rounded-lg border border-border-color">
+      {content}
+      <QuestionModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        question={selectedQuestion}
+      />
+    </div>
   );
 };
 
