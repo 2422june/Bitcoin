@@ -80,7 +80,7 @@ export const DailyComprehensiveChart = ({ height = 200, showHeader = true, showA
           <Tooltip 
             contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #333' }}
             formatter={(value, name) => [
-              `${formatPriceKRW(value)} KRW`,
+              value === 0 ? '데이터 없음' : `${formatPriceKRW(value)} KRW`,
               name
             ]}
             labelFormatter={(label) => `날짜: ${label}`}
@@ -238,13 +238,13 @@ export const PredictionAnalysis = ({ mode = 'analysis', containerHeight, accurac
         <div className="flex justify-between">
           <span className="text-gray-300">직전 예측</span>
           <span className={prevPrediction > 0 ? 'text-red-400 font-semibold' : prevPrediction < 0 ? 'text-blue-400 font-semibold' : 'font-semibold'}>
-            {Math.abs(prevPrediction)}% {prevPrediction > 0 ? '▲' : prevPrediction < 0 ? '▼' : '–'}
+            {Math.abs(prevPrediction).toFixed(2)}% {prevPrediction > 0 ? '▲' : prevPrediction < 0 ? '▼' : '–'}
           </span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-300">실제 변동</span>
           <span className={actualChange > 0 ? 'text-red-400 font-semibold' : actualChange < 0 ? 'text-blue-400 font-semibold' : 'font-semibold'}>
-            {Math.abs(actualChange)}% {actualChange > 0 ? '▲' : actualChange < 0 ? '▼' : '–'}
+            {Math.abs(actualChange).toFixed(2)}% {actualChange > 0 ? '▲' : actualChange < 0 ? '▼' : '–'}
           </span>
         </div>
         <div className="flex justify-between">
@@ -257,7 +257,7 @@ export const PredictionAnalysis = ({ mode = 'analysis', containerHeight, accurac
         </div>
         <div className="flex justify-between">
           <span className="text-gray-300">변동 차이</span>
-          <span className="font-semibold">{Math.round(difference)}%</span>
+          <span className="font-semibold">{difference.toFixed(2)}%</span>
         </div>
       </div>
 
@@ -274,6 +274,77 @@ export const PredictionAnalysis = ({ mode = 'analysis', containerHeight, accurac
           <span>{Math.max(0, Math.min(100, accuracySuccess))}</span>
           <span>{Math.max(0, 100 - Math.max(0, Math.min(100, accuracySuccess)))}</span>
         </div>
+      </div>
+
+             
+    </div>
+  );
+};
+
+// 예측 히스토리 컴포넌트
+export const PredictionHistoryChart = ({ height = 200, showHeader = true, showAxisLabels = false }) => {
+  const { predictionHistory } = usePredictionStore((s) => ({
+    predictionHistory: s.predictionHistory || []
+  }));
+
+  return (
+    <div className="p-4 rounded-lg h-full overflow-y-auto">
+      <h3 className="text-lg font-bold mb-4">예측 히스토리</h3>
+      <div className="space-y-3">
+        {predictionHistory.map((item, index) => (
+          <div key={index} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-400">{item.date}</span>
+              <span className={`text-xs px-2 py-1 rounded ${
+                item.difference <= 0.5 ? 'bg-green-600 text-white' : 
+                item.difference <= 1.0 ? 'bg-yellow-600 text-white' : 
+                'bg-red-600 text-white'
+              }`}>
+                정확도: {Math.max(0, 100 - item.difference * 10).toFixed(0)}%
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="text-gray-400 mb-1">예측 변동률</div>
+                <div className={`font-semibold ${
+                  item.predictedChange > 0 ? 'text-red-400' : 
+                  item.predictedChange < 0 ? 'text-blue-400' : 'text-gray-300'
+                }`}>
+                  {item.predictedChange > 0 ? '+' : ''}{item.predictedChange.toFixed(2)}%
+                </div>
+              </div>
+              
+              <div>
+                <div className="text-gray-400 mb-1">실제 변동률</div>
+                <div className={`font-semibold ${
+                  item.actualChange > 0 ? 'text-red-400' : 
+                  item.actualChange < 0 ? 'text-blue-400' : 'text-gray-300'
+                }`}>
+                  {item.actualChange > 0 ? '+' : ''}{item.actualChange.toFixed(2)}%
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t border-gray-700">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400 text-sm">변동 차이</span>
+                <span className={`font-semibold ${
+                  item.difference <= 0.5 ? 'text-green-400' : 
+                  item.difference <= 1.0 ? 'text-yellow-400' : 'text-red-400'
+                }`}>
+                  {item.difference.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {predictionHistory.length === 0 && (
+          <div className="text-center text-gray-400 py-8">
+            예측 히스토리가 없습니다.
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-import React, { useMemo, useEffect, useCallback, useState } from 'react';
-import { GaugeChart } from './ChartComponents';
+import React, { useMemo, useState } from 'react';
+
 import { useNow, formatNow, formatPriceKRW } from '../utils/useNow';
 import { handleQuestionClick } from '../utils/actions';
-import { setActualPrice, setPrevPredictedPrice, usePredictionStore } from '../store/PredictionStore';
+import { usePredictionStore } from '../store/PredictionStore';
 import QuestionModal from './QuestionModal';
 
 const BitcoinPrediction = ({
@@ -22,61 +22,35 @@ const BitcoinPrediction = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState('');
 
-  // 스토어에서 실제 가격 가져오기
-  const { actualPrice } = usePredictionStore((s) => ({
+  // 스토어에서 모든 필요한 값 가져오기
+  const { actualPrice, prevPredictedPrice } = usePredictionStore((s) => ({
     actualPrice: s.actualPrice || 165372669.46,
+    prevPredictedPrice: s.prevPredictedPrice || 0,
   }));
 
-  // 60초마다 실제 가격 업데이트 함수
-  const updateActualPrice = useCallback(() => {
-    // 랜덤 변동률 생성 (-5% ~ +5%)
-    const randomChange = (Math.random() - 0.5) * 0.1; // -5% ~ +5%
-    const newPrice = actualPrice * (1 + randomChange);
 
-    // 0원 이하인 경우 초기값으로 리셋
-    const finalPrice = newPrice <= 0 ? 165372669.46 : newPrice;
 
-    // 스토어에 실제 가격 저장
-    setActualPrice(finalPrice);
-  }, [actualPrice]);
 
-  // 컴포넌트 마운트 시 실제 가격 초기화
-  useEffect(() => {
-    if (!actualPrice || actualPrice === 0) {
-      setActualPrice(165372669.46);
-    }
-  }, [actualPrice]);
 
-  // 60초마다 실제 가격 업데이트
-  useEffect(() => {
-    const interval = setInterval(updateActualPrice, 60000); // 60초마다
-    return () => clearInterval(interval);
-  }, [updateActualPrice]);
 
-  // 예상 가격 계산 (실제 가격 + 예상 변동치)
+
+  // 예상 가격 계산 (스토어에서 가져온 값 사용)
   const predictedPrice = useMemo(() => {
-    const changeAmount = actualPrice * (deltaPercentProp / 100);
-    const newPredictedPrice = actualPrice + changeAmount;
+    // 스토어에서 이미 계산된 예상 가격을 사용
+    return prevPredictedPrice > 0 ? prevPredictedPrice : actualPrice;
+  }, [actualPrice, prevPredictedPrice]);
 
-    // 스토어에 예상 가격 저장
-    setPrevPredictedPrice(newPredictedPrice);
 
-    return newPredictedPrice;
-  }, [actualPrice, deltaPercentProp]);
-
-  const secNumber = Number(second);
-  // 남은 초 기준: 5초 남으면 약하게, 1초 남으면 가장 붉게
-  const dangerOpacity = secNumber <= 5 ? (6 - secNumber) / 5 : 0;
 
   // deltaPercent는 상위에서 관리 - 차트 전환 시 유지
   const deltaPercent = deltaPercentProp ?? 0;
 
-  // -100부터 100사이의 영역을 나누는 변수 4개
-  const zone1 = -100; // 취약 영역 시작
-  const zone2 = -50;  // 약세 영역 시작
-  const zone3 = 0;    // 안정 영역 시작
-  const zone4 = 50;   // 강세 영역 시작
-  const zone5 = 100;  // 완강 영역 끝
+  // -10부터 10사이의 영역을 나누는 변수 4개
+  const zone1 = -10; // 취약 영역 시작
+  const zone2 = -5;  // 약세 영역 시작
+  const zone3 = 0;   // 안정 영역 시작
+  const zone4 = 5;   // 강세 영역 시작
+  const zone5 = 10;  // 완강 영역 끝
 
   // 각 라벨의 기본 색상과 활성화 색상
   const labelColors = {
@@ -106,12 +80,9 @@ const BitcoinPrediction = ({
   const colorClass = deltaPercent > 0 ? 'text-red-400' : deltaPercent < 0 ? 'text-blue-400' : '';
   const zeroStyle = deltaPercent === 0 ? { color: '#f0f0f0' } : undefined;
 
-  const minDgree = 0;
-  const maxDgree = 180;
-  const areaDgreeMin = 0;
-  const areaDgreeMax = 180;
+
   const getDgree = () => {
-    return (deltaPercent + 100) * 180 / 200;
+    return (deltaPercent + 10) * 180 / 20;
   }
 
   // 질문 버튼 클릭 핸들러
@@ -121,8 +92,14 @@ const BitcoinPrediction = ({
   };
 
   // 모달 닫기 핸들러
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseModal = (newQuestion = null, isQuestionChange = false) => {
+    if (isQuestionChange && newQuestion) {
+      // 새로운 질문으로 모달 내용 변경
+      setSelectedQuestion(newQuestion);
+    } else {
+      // 일반적인 닫기 동작
+      setIsModalOpen(false);
+    }
   };
 
   const content = (
