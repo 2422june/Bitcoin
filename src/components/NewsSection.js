@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePredictionStore } from '../store/PredictionStore';
+import { generateCryptoDummyNews } from '../utils/newsAPI';
 
 const NewsSection = () => {
   const [news, setNews] = useState([]);
@@ -16,41 +17,66 @@ const NewsSection = () => {
       setError(null);
       
       console.log('🚀 백엔드 API 호출 시작');
-      
-      // 백엔드 API 호출
-      const response = await fetch('https://3.25.140.22/api/news?limit=12', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': window.location.origin
-        },
-        mode: 'cors',
-        credentials: 'omit'
-      });
 
-      console.log('📡 응답 상태:', response.status, response.statusText);
+      const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const params = 'limit=12';
+      const endpoints = [
+        // 로컬 개발 서버 우선
+        isLocal ? `http://localhost:8000/api/news?${params}` : null,
+        // 동일 도메인 프록시/배포 환경
+        `/api/news?${params}`,
+        // 마지막 폴백: 기존 외부 엔드포인트
+        `https://3.25.140.22/api/news?${params}`
+      ].filter(Boolean);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ HTTP 오류:', response.status, errorText);
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      let fetched = false;
+      let lastError = null;
+
+      for (const url of endpoints) {
+        try {
+          console.log('🌐 시도 중인 엔드포인트:', url);
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+
+          console.log('📡 응답 상태:', response.status, response.statusText);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+          }
+
+          const result = await response.json();
+          console.log('📡 백엔드 API 응답:', result);
+
+          if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+            setNews(result.data);
+            setError(null);
+            fetched = true;
+            break;
+          } else {
+            lastError = new Error('백엔드에서 유효한 뉴스 데이터를 반환하지 않았습니다.');
+          }
+        } catch (e) {
+          console.warn('⚠️ 엔드포인트 실패:', url, e.message);
+          lastError = e;
+          continue;
+        }
       }
 
-      const result = await response.json();
-      console.log('📡 백엔드 API 응답:', result);
-      
-      if (result.success && result.data && result.data.length > 0) {
-        console.log('✅ 백엔드에서 뉴스 데이터 반환');
-        setNews(result.data);
-        setError(null);
-      } else {
-        console.warn('⚠️ 백엔드 데이터 없음');
-        setError('뉴스 데이터를 가져올 수 없습니다.');
+      if (!fetched) {
+        console.warn('🟡 모든 엔드포인트 실패. 더미 뉴스로 대체합니다.');
+        const dummy = generateCryptoDummyNews(12);
+        setNews(dummy);
+        setError(`연결 오류: ${lastError?.message || '알 수 없는 오류'} (더미 데이터 표시 중)`);
       }
     } catch (err) {
       console.error('뉴스 가져오기 오류:', err);
-      setError(`연결 오류: ${err.message}`);
+      const dummy = generateCryptoDummyNews(12);
+      setNews(dummy);
+      setError(`연결 오류: ${err.message} (더미 데이터 표시 중)`);
     } finally {
       setLoading(false);
     }
